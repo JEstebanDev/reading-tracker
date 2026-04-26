@@ -1,26 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Superficies ── warm cream palette */
+  --color-background:                #FAF6F1;
+  --color-surface:                   #FAF6F1;
+  --color-surface-bright:            #FFFDF9;
+  --color-surface-dim:               #E8DDD2;
+  --color-surface-variant:           #EDE3D8;
+  --color-surface-container-lowest:  #FFFFFF;
+  --color-surface-container-low:     #F5EEE6;
+  --color-surface-container:         #EFE6DA;
+  --color-surface-container-high:    #E8DDD2;
+  --color-surface-container-highest: #E0D3C5;
+
+  /* ── Primario — sienna/café oscuro ── */
+  --color-primary:               #6B3A2A;
+  --color-on-primary:            #FFFFFF;
+  --color-primary-container:     #8B4A35;
+  --color-on-primary-container:  #FFE8DF;
+  --color-primary-fixed:         #FFD8C8;
+  --color-primary-fixed-dim:     #FFBFA6;
+  --color-on-primary-fixed:      #3B1508;
+  --color-on-primary-fixed-variant: #6B3A2A;
+  --color-inverse-primary:       #FFB599;
+
+  /* ── Secundario — café medio ── */
+  --color-secondary:             #7D5A4A;
+  --color-on-secondary:          #FFFFFF;
+  --color-secondary-container:   #F7E0D4;
+  --color-on-secondary-container:#4A2518;
+  --color-secondary-fixed:       #FFDDD0;
+  --color-secondary-fixed-dim:   #F0C4B4;
+  --color-on-secondary-fixed:    #2E0F04;
+  --color-on-secondary-fixed-variant: #5C3828;
+
+  /* ── Terciario — ámbar/dorado ── */
+  --color-tertiary:              #8A6A00;
+  --color-on-tertiary:           #FFFFFF;
+  --color-tertiary-container:    #C9A233;
+  --color-on-tertiary-container: #2C1F00;
+  --color-tertiary-fixed:        #FFE08A;
+  --color-tertiary-fixed-dim:    #F0C84A;
+  --color-on-tertiary-fixed:     #241A00;
+  --color-on-tertiary-fixed-variant: #594400;
+
+  /* ── Textos ── */
+  --color-on-surface:         #1E1208;
+  --color-on-surface-variant: #5A4235;
+  --color-on-background:      #1E1208;
+
+  /* ── Bordes ── */
+  --color-outline:         #9E7B6A;
+  --color-outline-variant: #D9C4B5;
+
+  /* ── Inverso ── */
+  --color-inverse-surface:    #332318;
+  --color-inverse-on-surface: #FFF0E8;
+
+  /* ── Superficie tint ── */
+  --color-surface-tint: #6B3A2A;
+
+  /* ── Error (sin cambio) ── */
+  --color-error:             #BA1A1A;
+  --color-on-error:          #FFFFFF;
+  --color-error-container:   #FFDAD6;
+  --color-on-error-container:#93000A;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+  font-family: 'Manrope', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Títulos con Playfair Display (serif) */
+h1, h2, h3 {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+::selection {
+  background-color: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
 }
