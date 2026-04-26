@@ -5,15 +5,18 @@ export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
-type Mode = "password" | "magic-link" | "check-inbox";
+type Mode = "login" | "register" | "magic-link" | "check-inbox";
 
 export default function LoginPage() {
-  const [mode, setMode] = useState<Mode>("password");
+  const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
 
   async function handlePasswordLogin(e: React.FormEvent) {
@@ -29,6 +32,36 @@ export default function LoginPage() {
     setLoading(false);
     if (error) setError("Correo o contraseña incorrectos.");
     // Si es exitoso, AuthContext detecta la sesión y redirige automáticamente
+  }
+
+  async function handleRegister(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setSuccessMessage(
+        "¡Cuenta creada! Revisa tu correo para confirmar tu cuenta antes de iniciar sesión."
+      );
+    }
   }
 
   async function handleMagicLink(e: React.FormEvent) {
@@ -67,6 +100,28 @@ export default function LoginPage() {
     },
   };
 
+  function switchMode(newMode: Mode) {
+    setMode(newMode);
+    setError(null);
+    setSuccessMessage(null);
+    setPassword("");
+    setConfirmPassword("");
+  }
+
+  const headingText =
+    mode === "check-inbox"
+      ? "Revisa tu correo"
+      : mode === "register"
+      ? "Crear cuenta"
+      : "Bienvenido";
+
+  const subText =
+    mode === "check-inbox"
+      ? `Enviamos un enlace mágico a ${email}.`
+      : mode === "register"
+      ? "Crea tu cuenta para acceder a Libris."
+      : "";
+
   return (
     <div
       className="min-h-screen w-full flex items-center justify-center"
@@ -75,6 +130,22 @@ export default function LoginPage() {
       <div className="w-full max-w-md px-6">
         {/* Brand */}
         <div className="text-center mb-10">
+          <div className="flex justify-center mb-3">
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center"
+              style={{ backgroundColor: "var(--color-primary-container)" }}
+            >
+              <span
+                className="material-symbols-outlined text-3xl"
+                style={{
+                  color: "var(--color-on-primary-container)",
+                  fontVariationSettings: "'FILL' 1",
+                }}
+              >
+                menu_book
+              </span>
+            </div>
+          </div>
           <p
             className="text-xs font-semibold tracking-widest uppercase mb-2"
             style={{ color: "var(--color-primary)" }}
@@ -88,13 +159,18 @@ export default function LoginPage() {
               color: "var(--color-on-surface)",
             }}
           >
-            {mode === "check-inbox" ? "Revisa tu correo" : "Bienvenido"}
+            {headingText}
           </h1>
-          <p className="mt-3 text-sm" style={{ color: "var(--color-on-surface-variant)" }}>
-            {mode === "check-inbox"
-              ? `Enviamos un enlace mágico a ${email}.`
-              : "Accede a tu biblioteca personal."}
-          </p>
+          {(mode === "login" || mode === "register") && (
+            <p className="mt-3 text-xs leading-relaxed max-w-xs mx-auto" style={{ color: "var(--color-outline)" }}>
+              Registra tus lecturas, lleva el seguimiento de tu progreso y construye tu biblioteca personal — todo en un solo lugar.
+            </p>
+          )}
+          {mode === "check-inbox" && (
+            <p className="mt-3 text-sm" style={{ color: "var(--color-on-surface-variant)" }}>
+              {subText}
+            </p>
+          )}
         </div>
 
         {/* Card */}
@@ -129,7 +205,7 @@ export default function LoginPage() {
                 </span>
               </p>
               <button
-                onClick={() => { setMode("password"); setError(null); }}
+                onClick={() => switchMode("login")}
                 className="text-sm font-medium underline underline-offset-2"
                 style={{ color: "var(--color-on-surface-variant)" }}
               >
@@ -138,8 +214,8 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* ── Contraseña ── */}
-          {mode === "password" && (
+          {/* ── Iniciar sesión ── */}
+          {mode === "login" && (
             <form onSubmit={handlePasswordLogin} className="flex flex-col gap-5">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="email" className="text-sm font-medium" style={{ color: "var(--color-on-surface)" }}>
@@ -225,19 +301,169 @@ export default function LoginPage() {
                 )}
               </button>
 
-              <button
-                type="button"
-                onClick={() => { setMode("magic-link"); setError(null); }}
-                className="text-center text-xs underline underline-offset-2"
-                style={{ color: "var(--color-on-surface-variant)" }}
-              >
-                Prefiero recibir un enlace mágico por correo
-              </button>
+              <p className="text-center text-xs" style={{ color: "var(--color-on-surface-variant)" }}>
+                ¿No tienes cuenta?{" "}
+                <button
+                  type="button"
+                  onClick={() => switchMode("register")}
+                  className="font-semibold underline underline-offset-2"
+                  style={{ color: "var(--color-primary)" }}
+                >
+                  Crear cuenta
+                </button>
+              </p>
+
+              {/* Magic-link temporalmente oculto por rate limit de Supabase */}
             </form>
           )}
 
-          {/* ── Magic Link ── */}
-          {mode === "magic-link" && (
+          {/* ── Crear cuenta ── */}
+          {mode === "register" && (
+            <form onSubmit={handleRegister} className="flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="reg-email" className="text-sm font-medium" style={{ color: "var(--color-on-surface)" }}>
+                  Correo electrónico
+                </label>
+                <input
+                  id="reg-email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  placeholder="tu@correo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all"
+                  style={inputStyle}
+                  {...focusHandlers}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="reg-password" className="text-sm font-medium" style={{ color: "var(--color-on-surface)" }}>
+                  Contraseña
+                </label>
+                <div className="relative">
+                  <input
+                    id="reg-password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    required
+                    placeholder="Mínimo 6 caracteres"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-xl border px-4 py-3 pr-11 text-sm outline-none transition-all"
+                    style={inputStyle}
+                    {...focusHandlers}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    style={{ color: "var(--color-on-surface-variant)" }}
+                  >
+                    <span className="material-symbols-outlined text-base">
+                      {showPassword ? "visibility_off" : "visibility"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="reg-confirm" className="text-sm font-medium" style={{ color: "var(--color-on-surface)" }}>
+                  Confirmar contraseña
+                </label>
+                <div className="relative">
+                  <input
+                    id="reg-confirm"
+                    type={showConfirmPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    required
+                    placeholder="Repite tu contraseña"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full rounded-xl border px-4 py-3 pr-11 text-sm outline-none transition-all"
+                    style={inputStyle}
+                    {...focusHandlers}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    style={{ color: "var(--color-on-surface-variant)" }}
+                  >
+                    <span className="material-symbols-outlined text-base">
+                      {showConfirmPassword ? "visibility_off" : "visibility"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div
+                  className="rounded-xl border px-4 py-3 text-sm flex items-center gap-2"
+                  style={{
+                    borderColor: "var(--color-error)",
+                    backgroundColor: "var(--color-error-container)",
+                    color: "var(--color-on-error-container)",
+                  }}
+                >
+                  <span className="material-symbols-outlined text-base">error</span>
+                  {error}
+                </div>
+              )}
+
+              {successMessage && (
+                <div
+                  className="rounded-xl border px-4 py-3 text-sm flex items-center gap-2"
+                  style={{
+                    borderColor: "var(--color-primary)",
+                    backgroundColor: "var(--color-secondary-container)",
+                    color: "var(--color-on-secondary-container)",
+                  }}
+                >
+                  <span className="material-symbols-outlined text-base">check_circle</span>
+                  {successMessage}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || !email.trim() || !password || !confirmPassword}
+                className="w-full rounded-xl py-3 text-sm font-semibold transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{ backgroundColor: "var(--color-primary)", color: "var(--color-on-primary)" }}
+              >
+                {loading ? (
+                  <>
+                    <span
+                      className="inline-block w-4 h-4 border-2 rounded-full animate-spin"
+                      style={{ borderColor: "var(--color-on-primary)", borderTopColor: "transparent" }}
+                    />
+                    Creando cuenta...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-base">person_add</span>
+                    Crear cuenta
+                  </>
+                )}
+              </button>
+
+              <p className="text-center text-xs" style={{ color: "var(--color-on-surface-variant)" }}>
+                ¿Ya tienes cuenta?{" "}
+                <button
+                  type="button"
+                  onClick={() => switchMode("login")}
+                  className="font-semibold underline underline-offset-2"
+                  style={{ color: "var(--color-primary)" }}
+                >
+                  Iniciar sesión
+                </button>
+              </p>
+            </form>
+          )}
+
+          {/* ── Magic Link (oculto temporalmente por rate limit de Supabase) ── */}
+          {false && mode === "magic-link" && (
             <form onSubmit={handleMagicLink} className="flex flex-col gap-5">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="email-otp" className="text-sm font-medium" style={{ color: "var(--color-on-surface)" }}>
@@ -295,7 +521,7 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={() => { setMode("password"); setError(null); }}
+                onClick={() => switchMode("login")}
                 className="text-center text-xs underline underline-offset-2"
                 style={{ color: "var(--color-on-surface-variant)" }}
               >
