@@ -1,9 +1,9 @@
 /**
  * scraperService.ts
- * Conecta con la API scrapper local para buscar libros.
+ * Llama a la API Route interna /api/books/search, que hace el proxy
+ * server-side al scrapper (scrapperbooks.railway.internal).
+ * Esto evita el Mixed Content error (http desde una página https).
  */
-
-const SCRAPER_BASE_URL = process.env.NEXT_PUBLIC_SCRAPER_URL ?? "http://localhost:8000";
 
 export interface ScraperBook {
   title: string;
@@ -24,18 +24,19 @@ export async function searchBooks(query: string): Promise<ScraperResult> {
   if (!query.trim()) return { ok: true, books: [] };
 
   try {
-    const url = `${SCRAPER_BASE_URL}/books/search?q=${encodeURIComponent(query.trim())}`;
+    const url = `/api/books/search?q=${encodeURIComponent(query.trim())}`;
     const res = await fetch(url, {
       headers: { accept: "application/json" },
-      // No cache — siempre fresco del scrapper
       cache: "no-store",
     });
 
     if (!res.ok) {
-      // Intenta parsear el error del scrapper
       try {
-        const err: ScraperError = await res.json();
-        const msg = err.detail?.[0]?.msg ?? `Error ${res.status}`;
+        const err = await res.json();
+        const msg =
+          typeof err?.detail === "string"
+            ? err.detail
+            : err.detail?.[0]?.msg ?? `Error ${res.status}`;
         return { ok: false, message: msg };
       } catch {
         return { ok: false, message: `Error ${res.status}: ${res.statusText}` };
@@ -47,7 +48,7 @@ export async function searchBooks(query: string): Promise<ScraperResult> {
   } catch (e) {
     const msg =
       e instanceof TypeError && e.message.includes("fetch")
-        ? "No se pudo conectar con el scrapper. ¿Está corriendo en localhost:8000?"
+        ? "No se pudo conectar con el scrapper."
         : "Error inesperado al buscar libros.";
     return { ok: false, message: msg };
   }
